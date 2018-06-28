@@ -1,2 +1,6 @@
 .DS_Store
-build/instancing.*
+build/*.data
+build/*.exe
+build/*.js
+build/*.wasm
+build/*.html

@@ -18,6 +18,10 @@
 #include "context.h"
 #include "util.h"
 
+#ifndef SPRITES_SIZE
+#define SPRITES_SIZE (32)
+#endif
+
 static void ems_loop( void* arg )
 {
     struct Context *context = (struct Context*)arg;
@@ -25,7 +29,7 @@ static void ems_loop( void* arg )
     double now = get_now();
     double delta = now - context->now;
     if(delta > 1000) {
-      printf("FPS: %d / delta: %2.2f\n",context->frames, delta);
+      printf("FPS: %d\n",context->frames);
       context->fps = context->frames;
       context->frames = 0;
       context->now = now;
@@ -38,39 +42,41 @@ static void ems_loop( void* arg )
     GLfloat xy_position[3*context->node_size];
     GLfloat sprite_size[2*context->node_size];
     GLfloat texture_z[context->node_size];
-    for(int j=0; j<context->node_size; j++){
+    for(int i=0; i<context->node_size; i++){
+      int position_index = i*3;
+      int sprite_index = i*2;
 
-      int k = j*3;
-      int i = j*2;
-      int x = j % (context->w/32);
-      int y = j / (context->w/32);
+#if 1
+      // no-rotation
       GLfloat angle = 0;
-      // GLfloat angle = j*0.1 / 360.0 * 2 * 3.1415;
-
-#if 0
-      // random position
-      xy_position[k+0] = rand() % context->w;
-      xy_position[k+1] = rand() % context->h;
 #else
-      // lined up
-      xy_position[k+0] = x * 32;
-      xy_position[k+1] = y * 32;
+      // rotation
+      GLfloat angle = i*0.1 / 360.0 * 2 * 3.1415;
 #endif
 
-      // angle
-      xy_position[k+2] = angle;
+#if 1
+      // random position
+      xy_position[position_index+0] = rand() % context->w;
+      xy_position[position_index+1] = rand() % context->h;
+      xy_position[position_index+2] = angle;
+#else
+      // lined up
+      xy_position[position_index+0] = i % (context->w/32) * 32;
+      xy_position[position_index+1] = i / (context->w/32) * 32;
+      xy_position[position_index+2] = angle;
+#endif
 
       // sprite_size
-      if(j%2==0){
-        sprite_size[i+0] = 32;
-        sprite_size[i+1] = 32;
+      if(i%2==0){
+        sprite_size[sprite_index+0] = 32;
+        sprite_size[sprite_index+1] = 32;
       }else{
-        sprite_size[i+0] = 16;
-        sprite_size[i+1] = 16;
+        sprite_size[sprite_index+0] = 16;
+        sprite_size[sprite_index+1] = 16;
       }
 
       // texture_z
-      texture_z[j] = j%3;
+      texture_z[i] = i%3;
     }
 
 
@@ -166,15 +172,7 @@ void setup_shader(struct Context *context)
     // projection
     setOrthographicProjection(context->w,context->h,context->projection_location);
 
-    // instance number
-    // context->node_size = 32768; // 122FPS@macOS / 30FPS@firefox
-    // context->node_size = 16384;
-    // context->node_size = 8192;
-    // context->node_size = 6144;
-    // context->node_size = 4096;
-    // context->node_size = 2048;
-    // context->node_size = 1024; // 270FPS@macOS
-    context->node_size = 640;
+    context->node_size = SPRITES_SIZE;
 
     // vertex
     GLfloat l=0, t=1, r=1, b=0;
